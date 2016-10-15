@@ -1,0 +1,4 @@
+{
+  "name": "alex",
+  "city": { "$ref": "../cities/seattle.json" }
+}

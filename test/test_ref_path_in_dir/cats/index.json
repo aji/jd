@@ -1,0 +1,5 @@
+{
+  "whiskers": "meow",
+  "snowball": "meow",
+  "bubbles": { "$ref": "bubbles.json" }
+}

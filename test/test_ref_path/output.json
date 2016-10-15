@@ -1,0 +1,12 @@
+{
+  "cats": {
+    "whiskers": "meow",
+    "snowball": "meow",
+    "bubbles": "meow"
+  },
+  "dogs": {
+    "spot": "woof",
+    "max": "woof",
+    "pork": "woof"
+  }
+}

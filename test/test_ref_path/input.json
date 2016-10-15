@@ -1,0 +1,4 @@
+{
+  "cats": { "$ref": "cats.json" },
+  "dogs": { "$ref": "dogs.json" }
+}

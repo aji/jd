@@ -1,0 +1,9 @@
+{
+  "user": {
+    "name": "alex",
+    "city": {
+      "name": "Seattle",
+      "state": "WA"
+    }
+  }
+}

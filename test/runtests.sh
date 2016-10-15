@@ -5,6 +5,8 @@ jeq="$root/jeq.py"
 
 cd "$root"
 
+export PATH="$root/bin:$PATH"
+
 failed=0
 for dir in "$root/test_"*; do
   cd "$dir"

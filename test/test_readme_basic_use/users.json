@@ -1,0 +1,6 @@
+{
+  "alex": {
+    "name": "Alex Iadicicco",
+    "city": { "$ref": "places.json#/states/wa/seattle" }
+  }
+}

@@ -7,39 +7,47 @@ import sys
 def is_ref(node):
     return isinstance(node, type({})) and list(node.keys()) == ['$ref']
 
-def deref(ref, root='.', doc=None):
-    path, _, frag = ref.partition('#')
+class Resolver(object):
+    def __init__(self, root='.', doc=None):
+        self.root = root
+        self._doc = doc
 
-    if path:
-        path = os.path.join(root, path)
-        root = os.path.dirname(path)
-        with open(path, 'r') as f:
-            doc = json.load(f)
-        return deref('#' + frag, root, doc)
+    def doc(self):
+        if self._doc is None:
+            self._doc = json.load(sys.stdin)
+        return self._doc
 
-    if doc is None:
-        doc = json.load(sys.stdin)
+    def deref(self, ref):
+        path, _, frag = ref.partition('#')
 
-    node = doc
-    for el in [x for x in frag.split('/') if x]:
+        if path:
+            path = os.path.join(self.root, path)
+            root = os.path.dirname(path)
+            with open(path, 'r') as f:
+                doc = json.load(f)
+            return Resolver(root, doc).deref('#' + frag)
+
+        node = self.doc()
+        for el in [x for x in frag.split('/') if x]:
+            if is_ref(node):
+                node = self.deref(node['$ref'])
+            node = node[int(el) if el.isdigit() else el]
+
+        return self.resolve(node)
+
+    def resolve(self, node=None):
+        if node is None:
+            node = self.doc()
         if is_ref(node):
-            node = deref(node['$ref'], root, doc)
-        node = node[int(el) if el.isdigit() else el]
-
-    return resolve(node, root, doc)
-
-def resolve(node, root='.', doc=None):
-    if doc is None:
-        doc = node
-    if is_ref(node):
-        return deref(node['$ref'], root, doc)
-    if isinstance(node, type([])):
-        return [resolve(x, root, doc) for x in node]
-    if isinstance(node, type({})):
-        return { k: resolve(v, root, doc) for k, v in node.items() }
-    return node
+            return self.deref(node['$ref'])
+        if isinstance(node, type([])):
+            return [self.resolve(x) for x in node]
+        if isinstance(node, type({})):
+            return { k: self.resolve(v) for k, v in node.items() }
+        return node
 
 if __name__ == '__main__':
+    resolver = Resolver()
     for arg in sys.argv[1:]:
-        json.dump(deref(arg), sys.stdout, indent=2)
+        json.dump(resolver.deref(arg), sys.stdout, indent=2)
         print()

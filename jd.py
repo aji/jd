@@ -7,6 +7,11 @@ import sys
 def is_ref(node):
     return isinstance(node, type({})) and list(node.keys()) == ['$ref']
 
+def frag_unesc(s):
+    return s\
+        .replace('~1', '/')\
+        .replace('~0', '~')
+
 class Resolver(object):
     def __init__(self, path=None):
         self.path = path
@@ -19,7 +24,7 @@ class Resolver(object):
             path = os.path.join(self._root(), path)
             return Resolver(path).deref('#' + frag)
 
-        frag = [x for x in frag.split('/') if x]
+        frag = [frag_unesc(x) for x in frag.split('/') if x]
         return self.resolve(self._follow_frag(self._doc(), frag))
 
     def resolve(self, node=None):

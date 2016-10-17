@@ -12,53 +12,121 @@ def frag_unesc(s):
         .replace('~1', '/')\
         .replace('~0', '~')
 
-class Resolver(object):
-    def __init__(self, path=None):
-        self.path = path
-        self._loaded_doc = None
+class Location(object):
+    def __init__(self, uri, at=[]):
+        self.uri = uri
+        self.at = at
+    def descend(self, to):
+        return Location(self.uri, self.at + [to])
 
-    def deref(self, ref):
-        path, _, frag = ref.partition('#')
+class StdinLocation(Location):
+    def __init__(self):
+        super().__init__('<stdin>')
 
-        if path:
-            path = os.path.join(self._root(), path)
-            return Resolver(path).deref('#' + frag)
+class ArgvLocation(Location):
+    def __init__(self):
+        pass
+    def descend(self, to):
+        raise ValueError('cannot descend an argv location')
 
-        frag = [frag_unesc(x) for x in frag.split('/') if x]
-        return self.resolve(self._follow_frag(self._doc(), frag))
+class Node(object):
+    def __init__(self, j, doc, loc):
+        self.j = j
+        self.doc = doc
+        self.loc = loc
 
-    def resolve(self, node=None):
-        if node is None:
-            node = self.doc()
-        if is_ref(node):
-            return self.deref(node['$ref'])
-        if isinstance(node, type([])):
-            return [self.resolve(x) for x in node]
-        if isinstance(node, type({})):
-            return { k: self.resolve(v) for k, v in node.items() }
-        return node
+    @staticmethod
+    def of(j, doc, loc):
+        if is_ref(j):
+            return Reference(j, doc, loc)
+        if isinstance(j, type([])):
+            return Array(j, doc, loc)
+        if isinstance(j, type({})):
+            return Object(j, doc, loc)
+        return Node(j, doc, loc)
 
-    def _root(self):
-        return os.path.dirname(self.path) if self.path is not None else '.'
+    def descend(self, to):
+        raise ValueError('cannot descend into a value')
 
-    def _doc(self):
-        if self._loaded_doc is None:
-            if self.path is not None:
-                with open(self.path, 'r') as f:
-                    self._loaded_doc = json.load(f)
-            else:
-                self._loaded_doc = json.load(sys.stdin)
-        return self._loaded_doc
+    def resolve(self):
+        return self.j
 
-    def _follow_frag(self, node, frag):
-        for el in frag:
-            if is_ref(node):
-                node = self.deref(node['$ref'])
-            node = node[int(el) if el.isdigit() else el]
-        return node
+class Reference(Node):
+    def __init__(self, j, doc, loc):
+        super().__init__(j, doc, loc)
+
+        uri, _, frag = j['$ref'].partition('#')
+        self.uri = uri
+        self.frag = [frag_unesc(x) for x in frag.split('/') if x]
+
+        self._target_doc = None
+        self._target = None
+
+    def descend(self, to):
+        return self._deref().descend(to)
+
+    def resolve(self):
+        return self._deref().resolve()
+
+    def _deref(self):
+        if self._target is None:
+            if self._target_doc is None:
+                doc = self.doc.load(self.uri) if self.uri else self.doc
+                self._target_doc = doc
+            node = self._target_doc.node()
+            for el in self.frag:
+                node = node.descend(el)
+            self._target = node
+        return self._target
+
+class Array(Node):
+    def descend(self, to):
+        return Node.of(self.j[int(to)], self.doc, self.loc.descend(to))
+
+    def resolve(self):
+        return [
+            Node.of(x, self.doc, self.loc.descend(str(i))).resolve()
+            for x, i in enumerate(self.j)]
+
+class Object(Node):
+    def descend(self, to):
+        return Node.of(self.j[to], self.doc, self.loc.descend(to))
+
+    def resolve(self):
+        return {
+            k: Node.of(v, self.doc, self.loc.descend(k)).resolve()
+            for k, v in self.j.items()}
+
+class Document(object):
+    def __init__(self, j, uri):
+        self._node = Node.of(j, self, Location(uri))
+        self._root = os.path.dirname(uri)
+
+    def node(self):
+        return self._node
+
+    def root(self):
+        return self._root
+
+    def load(self, uri):
+        fulluri = os.path.join(self.root(), uri)
+        with open(fulluri, 'r') as f:
+            j = json.load(f)
+        return Document(j, fulluri)
+
+class StdinDocument(Document):
+    def __init__(self):
+        self._node = None
+        self._root = '.'
+
+    def node(self):
+        if self._node is None:
+            self._node = Node.of(json.load(sys.stdin), self, StdinLocation())
+        return self._node
 
 if __name__ == '__main__':
-    resolver = Resolver()
+    stdin = StdinDocument()
     for arg in sys.argv[1:]:
-        json.dump(resolver.deref(arg), sys.stdout, indent=2)
+        node = Node.of({ '$ref': arg }, stdin, ArgvLocation())
+        json.dump(node.resolve(), sys.stdout, indent=2)
         print()

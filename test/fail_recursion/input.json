@@ -1,0 +1,6 @@
+{
+  "user": {
+    "name": "alex",
+    "city": { "$ref": "#/user/city" }
+  }
+}

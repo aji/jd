@@ -16,6 +16,8 @@ class Location(object):
     def __init__(self, uri, at=[]):
         self.uri = uri
         self.at = at
+    def describe(self):
+        return 'at {}#{}'.format(self.uri, '/'.join([''] + self.at))
     def descend(self, to):
         return Location(self.uri, self.at + [to])
 
@@ -26,6 +28,8 @@ class StdinLocation(Location):
 class ArgvLocation(Location):
     def __init__(self):
         pass
+    def describe(self):
+        return 'on command line'
     def descend(self, to):
         raise ValueError('cannot descend an argv location')
 
@@ -55,7 +59,8 @@ class Reference(Node):
     def __init__(self, j, doc, loc):
         super().__init__(j, doc, loc)
 
-        uri, _, frag = j['$ref'].partition('#')
+        self.spec = j['$ref']
+        uri, _, frag = self.spec.partition('#')
         self.uri = uri
         self.frag = [frag_unesc(x) for x in frag.split('/') if x]
 
@@ -69,6 +74,16 @@ class Reference(Node):
         return self._deref().resolve()
 
     def _deref(self):
+        try:
+            return self._deref_unprotected()
+        except Exception as e:
+            err = '{}: {}'.format(type(e).__name__, str(e))
+            loc = self.loc.describe()
+            msg = 'bad reference {} {}: {}'.format(repr(self.spec), loc, err)
+            sys.stderr.write(msg + '\n')
+            sys.exit(1)
+
+    def _deref_unprotected(self):
         if self._target is None:
             if self._target_doc is None:
                 doc = self.doc.load(self.uri) if self.uri else self.doc
@@ -126,7 +141,10 @@ class StdinDocument(Document):
 
 if __name__ == '__main__':
     stdin = StdinDocument()
-    for arg in sys.argv[1:]:
+    args = sys.argv[1:]
+    if len(args) == 0:
+        args = ['#']
+    for arg in args:
         node = Node.of({ '$ref': arg }, stdin, ArgvLocation())
         json.dump(node.resolve(), sys.stdout, indent=2)
         print()

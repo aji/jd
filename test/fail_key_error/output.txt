@@ -1,0 +1,1 @@
+bad reference '#/cities/phoenix' at ./input.json#/user/city: KeyError: 'phoenix'

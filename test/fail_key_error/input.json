@@ -1,0 +1,12 @@
+{
+  "user": {
+    "name": "alex",
+    "city": { "$ref": "#/cities/phoenix" }
+  },
+  "cities": {
+    "seattle": {
+      "name": "Seattle",
+      "state": "WA"
+    }
+  }
+}

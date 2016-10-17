@@ -1,0 +1,1 @@
+bad reference '#/cities/seattle' at ./input.json#/user/city: ValueError: invalid literal for int() with base 10: 'seattle'

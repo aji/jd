@@ -1,0 +1,10 @@
+{
+  "user": {
+    "name": "alex",
+    "city": { "$ref": "#/cities/2" }
+  },
+  "cities": [
+    "seattle",
+    "phoenix"
+  ]
+}

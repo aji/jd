@@ -1,0 +1,1 @@
+bad reference '#/cities/2' at ./input.json#/user/city: IndexError: list index out of range

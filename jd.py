@@ -12,6 +12,20 @@ def frag_unesc(s):
         .replace('~1', '/')\
         .replace('~0', '~')
 
+def frag_parse(s):
+    if s == '':
+        return []
+    if not s.startswith('/'):
+        raise ValueError('invalid fragment identifier: ' + repr(s))
+    return [frag_unesc(x) for x in s[1:].split('/')]
+
+def format_exception(e):
+    if isinstance(e, RecursionError):
+        return 'maximum recursion depth exceeded'
+    if isinstance(e, ValueError):
+        return str(e)
+    return '{}: {}'.format(type(e).__name__, str(e))
+
 class Location(object):
     def __init__(self, uri, at=[]):
         self.uri = uri
@@ -62,7 +76,7 @@ class Reference(Node):
         self.spec = j['$ref']
         uri, _, frag = self.spec.partition('#')
         self.uri = uri
-        self.frag = [frag_unesc(x) for x in frag.split('/') if x]
+        self.frag = frag
 
         self._target_doc = None
         self._target = None
@@ -77,7 +91,7 @@ class Reference(Node):
         try:
             return self._deref_unprotected()
         except Exception as e:
-            err = '{}: {}'.format(type(e).__name__, str(e))
+            err = format_exception(e)
             loc = self.loc.describe()
             msg = 'bad reference {} {}: {}'.format(repr(self.spec), loc, err)
             sys.stderr.write(msg + '\n')
@@ -89,7 +103,7 @@ class Reference(Node):
                 doc = self.doc.load(self.uri) if self.uri else self.doc
                 self._target_doc = doc
             node = self._target_doc.node()
-            for el in self.frag:
+            for el in frag_parse(self.frag):
                 node = node.descend(el)
             self._target = node
         return self._target

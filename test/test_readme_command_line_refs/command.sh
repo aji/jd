@@ -1,1 +1,1 @@
-jd places.json#states
+jd places.json#/states

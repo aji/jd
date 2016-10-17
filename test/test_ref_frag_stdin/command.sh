@@ -1,1 +1,1 @@
-cat input.json | jd "#user"
+cat input.json | jd "#/user"

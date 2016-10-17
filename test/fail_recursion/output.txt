@@ -1,1 +1,1 @@
-bad reference '#/user/city' at ./input.json#/user/city: RecursionError: maximum recursion depth exceeded
+bad reference '#/user/city' at ./input.json#/user/city: maximum recursion depth exceeded

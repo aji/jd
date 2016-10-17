@@ -1,0 +1,1 @@
+bad reference '#cities/seattle' at ./input.json#/user/city: invalid fragment identifier: 'cities/seattle'

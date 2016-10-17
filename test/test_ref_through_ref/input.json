@@ -1,6 +1,6 @@
 {
   "user": {
     "name": "alex",
-    "city": { "$ref": "states.json#WA/seattle" }
+    "city": { "$ref": "states.json#/WA/seattle" }
   }
 }

@@ -16,7 +16,7 @@ for dir in "$root/test_"*; do
     echo "  EXPECTED:"
     cat ./output.json | sed 's/^/    /'
     echo "  GOT:"
-    sh ./command.sh | sed 's/^/    /'
+    sh ./command.sh 2>&1 | sed 's/^/    /'
     let failed=failed+1
   fi
 done

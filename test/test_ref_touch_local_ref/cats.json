@@ -1,0 +1,9 @@
+{
+  "cats": {
+    "whiskers": {
+      "name": "Whiskers The Cat",
+      "fuzzy": { "$ref": "#/cats_are_fuzzy" }
+    }
+  },
+  "cats_are_fuzzy": true
+}

@@ -1,0 +1,5 @@
+{
+  "a": { "$ref": "#/c", "__ignore_this_ref": true },
+  "b": { "$ref": "#/c" },
+  "c": 3
+}

@@ -11,7 +11,7 @@ failed=0
 
 for dir in "$root/test_"*; do
   cd "$dir"
-  echo "$(basename "$dir")"
+  echo "$(basename "$dir")" -- "$(cat ./command.sh)"
   if ! sh ./command.sh 2>/dev/null | "$jeq" ./output.json; then
     echo "  EXPECTED:"
     cat ./output.json | sed 's/^/    /'
@@ -23,7 +23,7 @@ done
 
 for dir in "$root/fail_"*; do
   cd "$dir"
-  echo "$(basename "$dir")"
+  echo "$(basename "$dir")" -- "$(cat ./command.sh)"
   actual="/tmp/output.txt"
   if sh ./command.sh 2> "$actual" > /dev/null; then
     echo "  EXPECTED command to fail"

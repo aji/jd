@@ -13,6 +13,11 @@ def frag_unesc(s):
         .replace('~1', '/')\
         .replace('~0', '~')
 
+def frag_esc(s):
+    return s\
+        .replace('~', '~0')\
+        .replace('/', '~1')
+
 def frag_parse(s):
     if s == '':
         return []
@@ -35,7 +40,8 @@ class Location(object):
         self.uri = uri
         self.at = at
     def describe(self):
-        return 'at {}#{}'.format(self.uri, '/'.join([''] + self.at))
+        frag = '/'.join(frag_esc(x) for x in [''] + self.at)
+        return 'at {}#{}'.format(self.uri, frag)
     def descend(self, to):
         return Location(self.uri, self.at + [to])
 

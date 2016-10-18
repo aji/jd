@@ -35,6 +35,22 @@ def format_exception(e):
         return str(e)
     return '{}: {}'.format(type(e).__name__, str(e))
 
+class RefError(object):
+    def __init__(self, ref, exc):
+        self.ref = ref
+        self.exc = exc
+
+    def format(self):
+        if isinstance(self.exc, json.JSONDecodeError):
+            return 'error reading {}: {}'.format(self.ref.target_uri(), str(self.exc))
+        else:
+            err = format_exception(self.exc)
+            loc = self.ref.loc.describe()
+            return 'bad reference {} {}: {}'.format(repr(self.ref.spec), loc, err)
+
+    def write(self, f):
+        f.write(self.format() + '\n')
+
 class Location(object):
     def __init__(self, uri, at=[]):
         self.uri = uri
@@ -101,10 +117,7 @@ class Reference(Node):
         try:
             return self._deref_unprotected()
         except Exception as e:
-            err = format_exception(e)
-            loc = self.loc.describe()
-            msg = 'bad reference {} {}: {}'.format(repr(self.spec), loc, err)
-            sys.stderr.write(msg + '\n')
+            RefError(self, e).write(sys.stderr)
             sys.exit(1)
 
     def _deref_unprotected(self):
@@ -117,6 +130,9 @@ class Reference(Node):
                 node = node.descend(el)
             self._target = node
         return self._target
+
+    def target_uri(self):
+        return self.uri if self.uri else self.doc.uri()
 
 class Array(Node):
     def descend(self, to):
@@ -138,8 +154,12 @@ class Object(Node):
 
 class Document(object):
     def __init__(self, j, uri):
+        self._uri = uri
         self._node = Node.of(j, self, Location(uri))
         self._root = os.path.dirname(uri)
+
+    def uri(self):
+        return self._uri
 
     def node(self):
         return self._node
@@ -155,6 +175,7 @@ class Document(object):
 
 class StdinDocument(Document):
     def __init__(self):
+        self._uri = 'standard input'
         self._node = None
         self._root = '.'
 

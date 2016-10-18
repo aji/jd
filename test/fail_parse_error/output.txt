@@ -1,0 +1,1 @@
+error reading input.json: Expecting ',' delimiter: line 6 column 3 (char 82)

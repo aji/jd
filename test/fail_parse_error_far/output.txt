@@ -1,0 +1,1 @@
+error reading cities.json: Expecting ',' delimiter: line 4 column 5 (char 43)

@@ -34,7 +34,9 @@ import os
 import sys
 
 def is_ref(node):
-    return isinstance(node, type({})) and list(node.keys()) == ['$ref']
+    return isinstance(node, type({})) \
+        and list(node.keys()) == ['$ref'] \
+        and isinstance(node['$ref'], type(''))
 
 def frag_unesc(s):
     return s\

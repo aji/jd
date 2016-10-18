@@ -1,4 +1,7 @@
-# `jd` -- JSON dereferencer
+# `jd` BETA -- JSON dereferencer
+
+**This is beta-level software. Do not expect quality or stability, but
+feel free to be cautiously optimistic.**
 
 Dereferences `$ref`-style references.
 

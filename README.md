@@ -46,6 +46,22 @@ adding a separate dummy property:
 { "$ref": "something.json", "__ignore_this_ref": true }
 ```
 
+This object will be left untouched.
+
+If the object has only a `$ref` property and a `__jd_keep_ref` property, and the
+value of `__jd_keep_ref` is `true`, then `jd` will delete the `__jd_keep_ref`
+property while leaving the `$ref` property untouched. That is, this
+
+```
+{ "$ref": "something.json", "__jd_keep_ref": true }
+```
+
+becomes this
+
+```
+{ "$ref": "something.json" }
+```
+
 # Installation
 
 Get `jd.py` in your `PATH` somehow. My favorite way is with a symlink:

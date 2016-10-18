@@ -1,6 +1,7 @@
 {
-  "a": { "$ref": "#/c", "__ignore_this_ref": true },
-  "b": 3,
+  "a": { "$ref": "#/value", "__ignore_this_ref": true },
+  "b": { "$ref": "#/value" },
   "c": 3,
-  "d": { "$ref": [ "c" ] }
+  "d": { "$ref": [ "value" ] },
+  "value": 3
 }

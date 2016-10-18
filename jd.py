@@ -38,6 +38,12 @@ def is_ref(node):
         and list(node.keys()) == ['$ref'] \
         and isinstance(node['$ref'], type(''))
 
+def is_jd_keep_ref(node):
+    return isinstance(node, type({})) \
+        and list(node.keys()) == ['$ref', '__jd_keep_ref'] \
+        and isinstance(node['$ref'], type('')) \
+        and node['__jd_keep_ref'] is True
+
 def frag_unesc(s):
     return s\
         .replace('~1', '/')\
@@ -204,6 +210,8 @@ class Object(Node):
         return Node.of(self.j[to], self.doc, self.loc.descend(to))
 
     def resolve(self, ctx):
+        if is_jd_keep_ref(self.j):
+            return { '$ref': self.j['$ref'] }
         return OrderedDict(
             (k, Node.of(v, self.doc, self.loc.descend(k)).resolve(ctx))
             for k, v in self.j.items())

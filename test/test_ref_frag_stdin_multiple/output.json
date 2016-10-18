@@ -1,0 +1,11 @@
+{
+  "name": "alex",
+  "city": {
+    "name": "Seattle",
+    "state": "WA"
+  }
+}
+{
+  "name": "Seattle",
+  "state": "WA"
+}

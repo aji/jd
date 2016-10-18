@@ -4,7 +4,8 @@
     "another reference, but I'm actually testing that things that look like",
     "references but aren't still have their contents resolved correctly."
   ],
-
-  "name": { "$ref": "foo" },
+  "name": {
+    "$ref": "foo"
+  },
   "data": "foo"
 }

@@ -1,8 +1,20 @@
 {
-  "a": { "$ref": "#/value", "__ignore_this_ref": true },
-  "b": { "$ref": "#/value" },
-  "c": { "$ref": "#/value", "__jd_keep_ref": "yes" },
+  "a": {
+    "$ref": "#/value",
+    "__ignore_this_ref": true
+  },
+  "b": {
+    "$ref": "#/value"
+  },
+  "c": {
+    "$ref": "#/value",
+    "__jd_keep_ref": "yes"
+  },
   "d": 3,
-  "e": { "$ref": [ "value" ] },
+  "e": {
+    "$ref": [
+      "value"
+    ]
+  },
   "value": 3
 }

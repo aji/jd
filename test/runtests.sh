@@ -12,7 +12,7 @@ failed=0
 for dir in "$root/test_"*; do
   cd "$dir"
   echo "$(basename "$dir")" -- "$(cat ./command.sh)"
-  if ! sh ./command.sh 2>/dev/null | "$jeq" ./output.json; then
+  if ! sh ./command.sh 2>/dev/null | diff ./output.json -; then
     echo "  EXPECTED:"
     cat ./output.json | sed 's/^/    /'
     echo "  GOT:"

@@ -31,6 +31,8 @@ def json_load(f):
 def format_exception(e):
     if isinstance(e, RecursionError):
         return 'maximum recursion depth exceeded'
+    if isinstance(e, FileNotFoundError):
+        return '{}: {}'.format(e.strerror, e.filename)
     if isinstance(e, ValueError):
         return str(e)
     return '{}: {}'.format(type(e).__name__, str(e))
@@ -50,6 +52,20 @@ class RefError(object):
 
     def write(self, f):
         f.write(self.format() + '\n')
+
+class ResolverContext(object):
+    def __init__(self):
+        self._errors = []
+
+    def assert_no_errors(self):
+        if len(self._errors) == 0:
+            return
+        for err in self._errors:
+            err.write(sys.stderr)
+        sys.exit(1)
+
+    def add_ref_error(self, ref, exc):
+        self._errors.append(RefError(ref, exc))
 
 class Location(object):
     def __init__(self, uri, at=[]):
@@ -89,11 +105,21 @@ class Node(object):
             return Object(j, doc, loc)
         return Node(j, doc, loc)
 
-    def descend(self, to):
+    def descend(self, ctx, to):
         raise ValueError('cannot descend into a value')
 
-    def resolve(self):
+    def resolve(self, ctx):
         return self.j
+
+class ErrNode(Node):
+    def __init__(self):
+        super().__init__(None, None, None)
+
+    def descend(self, ctx, to):
+        return self
+
+    def resolve(self, ctx):
+        return "(internal error)"
 
 class Reference(Node):
     def __init__(self, j, doc, loc):
@@ -107,27 +133,27 @@ class Reference(Node):
         self._target_doc = None
         self._target = None
 
-    def descend(self, to):
-        return self._deref().descend(to)
+    def descend(self, ctx, to):
+        return self._deref(ctx).descend(ctx, to)
 
-    def resolve(self):
-        return self._deref().resolve()
+    def resolve(self, ctx):
+        return self._deref(ctx).resolve(ctx)
 
-    def _deref(self):
+    def _deref(self, ctx):
         try:
-            return self._deref_unprotected()
+            return self._deref_unprotected(ctx)
         except Exception as e:
-            RefError(self, e).write(sys.stderr)
-            sys.exit(1)
+            ctx.add_ref_error(self, e)
+            return ErrNode()
 
-    def _deref_unprotected(self):
+    def _deref_unprotected(self, ctx):
         if self._target is None:
             if self._target_doc is None:
                 doc = self.doc.load(self.uri) if self.uri else self.doc
                 self._target_doc = doc
             node = self._target_doc.node()
             for el in frag_parse(self.frag):
-                node = node.descend(el)
+                node = node.descend(ctx, el)
             self._target = node
         return self._target
 
@@ -135,21 +161,21 @@ class Reference(Node):
         return self.uri if self.uri else self.doc.uri()
 
 class Array(Node):
-    def descend(self, to):
+    def descend(self, ctx, to):
         return Node.of(self.j[int(to)], self.doc, self.loc.descend(to))
 
-    def resolve(self):
+    def resolve(self, ctx):
         return [
-            Node.of(x, self.doc, self.loc.descend(str(i))).resolve()
+            Node.of(x, self.doc, self.loc.descend(str(i))).resolve(ctx)
             for i, x in enumerate(self.j)]
 
 class Object(Node):
-    def descend(self, to):
+    def descend(self, ctx, to):
         return Node.of(self.j[to], self.doc, self.loc.descend(to))
 
-    def resolve(self):
+    def resolve(self, ctx):
         return OrderedDict(
-            (k, Node.of(v, self.doc, self.loc.descend(k)).resolve())
+            (k, Node.of(v, self.doc, self.loc.descend(k)).resolve(ctx))
             for k, v in self.j.items())
 
 class Document(object):
@@ -189,7 +215,12 @@ if __name__ == '__main__':
     args = sys.argv[1:]
     if len(args) == 0:
         args = ['#']
+    ctx = ResolverContext()
+    results = []
     for arg in args:
         node = Node.of({ '$ref': arg }, stdin, ArgvLocation())
-        json.dump(node.resolve(), sys.stdout, indent=2)
+        results.append(node.resolve(ctx))
+    ctx.assert_no_errors()
+    for result in results:
+        json.dump(result, sys.stdout, indent=2)
         print()

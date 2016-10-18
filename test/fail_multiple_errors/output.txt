@@ -1,0 +1,4 @@
+bad reference '#/name/alex' at ./input.json#/user/name: KeyError: 'name'
+bad reference '#/cities/phoenix' at ./input.json#/user/city: KeyError: 'phoenix'
+bad reference 'cities.json#/seattle/name' at ./input.json#/cities/seattle/name: No such file or directory: ./cities.json
+error reading states.json: Expecting value: line 1 column 1 (char 0)

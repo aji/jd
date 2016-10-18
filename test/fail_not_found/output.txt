@@ -1,1 +1,1 @@
-bad reference 'cities.json#/seattle' at ./input.json#/user/city: FileNotFoundError: [Errno 2] No such file or directory: './cities.json'
+bad reference 'cities.json#/seattle' at ./input.json#/user/city: No such file or directory: ./cities.json

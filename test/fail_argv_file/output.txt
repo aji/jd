@@ -1,1 +1,1 @@
-bad reference 'nonexistent' on command line: FileNotFoundError: [Errno 2] No such file or directory: './nonexistent'
+bad reference 'nonexistent' on command line: No such file or directory: ./nonexistent

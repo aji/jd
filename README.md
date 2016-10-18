@@ -36,6 +36,11 @@ usage.
 
 # Deviations from specifications
 
+`jd` deviates from the JSON Reference and JSON Pointer standards in a few
+ways, described here.
+
+## Definition of a reference
+
 The JSON reference specification describes a reference as simply being any JSON
 object containing a `$ref` property with a string value. `jd` goes one step
 further and requires that `$ref` be the *only* property in the object. This
@@ -61,6 +66,26 @@ becomes this
 ```
 { "$ref": "something.json" }
 ```
+
+## Following JSON pointers
+
+The rules for following a JSON pointer do not specify any interaction with JSON
+references. A strict interpretation of the standard indicates that resolving a
+pointer should never resolve a reference. Consider the following document.
+
+```
+$ echo '{ "$ref": "file.json" }' | jd '#/something'
+```
+
+According to the standard, this should result in an error, since the document
+that `#/somesomething` points to (standard input) has no property `something`.
+`jd`, however, would resolve the reference first, then check the resolved
+document for a `something` property.
+
+Relatedly, the JSON pointer specification defines a pointer to be a URI.
+Although the `jd` source frequently uses the term `uri`, `jd` only ever resolves
+these URIs as filenames. Support for complete URIs may be added in the future,
+but only as an opt-in feature.
 
 # Installation
 

@@ -115,7 +115,7 @@ class Array(Node):
     def resolve(self):
         return [
             Node.of(x, self.doc, self.loc.descend(str(i))).resolve()
-            for x, i in enumerate(self.j)]
+            for i, x in enumerate(self.j)]
 
 class Object(Node):
     def descend(self, to):

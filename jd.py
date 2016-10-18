@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from collections import OrderedDict
 import json
 import os
 import sys
@@ -18,6 +19,9 @@ def frag_parse(s):
     if not s.startswith('/'):
         raise ValueError('invalid fragment identifier: ' + repr(s))
     return [frag_unesc(x) for x in s[1:].split('/')]
+
+def json_load(f):
+    return json.load(f, object_pairs_hook=OrderedDict)
 
 def format_exception(e):
     if isinstance(e, RecursionError):
@@ -122,9 +126,9 @@ class Object(Node):
         return Node.of(self.j[to], self.doc, self.loc.descend(to))
 
     def resolve(self):
-        return {
-            k: Node.of(v, self.doc, self.loc.descend(k)).resolve()
-            for k, v in self.j.items()}
+        return OrderedDict(
+            (k, Node.of(v, self.doc, self.loc.descend(k)).resolve())
+            for k, v in self.j.items())
 
 class Document(object):
     def __init__(self, j, uri):
@@ -140,7 +144,7 @@ class Document(object):
     def load(self, uri):
         fulluri = os.path.join(self.root(), uri)
         with open(fulluri, 'r') as f:
-            j = json.load(f)
+            j = json_load(f)
         return Document(j, fulluri)
 
 class StdinDocument(Document):
@@ -150,7 +154,7 @@ class StdinDocument(Document):
 
     def node(self):
         if self._node is None:
-            self._node = Node.of(json.load(sys.stdin), self, StdinLocation())
+            self._node = Node.of(json_load(sys.stdin), self, StdinLocation())
         return self._node
 
 if __name__ == '__main__':
